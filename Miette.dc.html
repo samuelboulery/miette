@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+  body { margin: 0; background: #d9d7d3; }
+  a { color: inherit; }
+  select, button, input { font: inherit; }
+</style>
+</helmet>
+
+<div style="position: relative; width: 2620px; min-height: 1620px; padding: 0; font-family: 'IBM Plex Mono', monospace;">
+
+  <div style="position: absolute; left: 40px; top: 36px; width: 1200px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #4a4744;">Direction 1 — Nocturne · <span style="color: #7a756f;">étape 1 : import &amp; parsing</span></div>
+
+  <div style="position: absolute; left: 1340px; top: 36px; width: 1200px; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #4a4744;">Direction 2 — Modernist · <span style="color: #7a756f;">étape 1 : import &amp; parsing</span></div>
+
+  <!-- ── NOCTURNE ─────────────────────────────────────────────── -->
+  <div style="position: absolute; left: 40px; top: 72px; width: 1200px; height: 1480px; display: flex; flex-direction: column; overflow: hidden; background: #161826; color: #e9e9ed; font-family: Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.55; border-radius: 14px; box-shadow: 0 0 0 1px #595d6c, 0 16px 40px rgba(0,0,0,0.35);">
+
+    <div style="display: flex; align-items: center; gap: 11.2px; padding: 11.2px 22.4px; border-bottom: 1px solid rgba(233,233,237,0.16);">
+      <span style="font-weight: 500; font-size: 17px; letter-spacing: -0.01em;">Miette</span>
+      <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #d2cefd; border: 1px solid #5d5294; border-radius: 4px; padding: 1.4px 5.6px;">100 % local</span>
+      <span style="flex: 1;"></span>
+      <span style="font-size: 12.5px; color: #75798c;">Étape 1 / 4 · import</span>
+    </div>
+    <div style="height: 2px; background: linear-gradient(to right, transparent, #9184d9 48px, #9184d9 calc(100% - 48px), transparent); opacity: 0.55;"></div>
+
+    <div style="padding: 22.4px 22.4px 16.8px; display: flex; flex-direction: column; gap: 8.4px;">
+      <h1 style="margin: 0; font-weight: 500; font-size: 38px; line-height: 1.12; letter-spacing: -0.02em;">Déposez l'export de votre banque.</h1>
+      <p style="margin: 0; max-width: 620px; color: #b2b6ca; font-size: 15px; text-wrap: pretty;">Tout se passe dans votre navigateur : votre fichier ne quitte jamais cet appareil, et rien n'est envoyé nulle part. On commence simplement — lire vos lignes correctement.</p>
+    </div>
+
+    <sc-if value="{{ n.isEmpty }}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 0 22.4px 22.4px;">
+        <div onDragOver="{{ n.onDragOver }}" onDragLeave="{{ n.onDragLeave }}" onDrop="{{ n.onDrop }}" style="border: 1px dashed #5d5294; border-radius: 8px; padding: 44.8px 22.4px; background: linear-gradient(#1b1d2d, #161826); display: flex; flex-direction: column; align-items: flex-start; gap: 16.8px;">
+          <div style="display: flex; flex-direction: column; gap: 2.8px;">
+            <span style="font-size: 20px; font-weight: 500;">Glissez votre fichier CSV ici</span>
+            <span style="font-size: 13.5px; color: #9397ab;">N'importe quelle banque. Séparateur, accents et virgules décimales sont gérés automatiquement.</span>
+          </div>
+          <div style="display: flex; gap: 8.4px; flex-wrap: wrap;">
+            <label for="noc-file" style="cursor: pointer; display: inline-flex; align-items: center; border: 1px solid #9184d9; color: #d2cefd; background: transparent; border-radius: 8px; padding: 8.4px 16.8px; font-size: 14px; font-weight: 500;" style-hover="background: rgba(145,132,217,0.14);">Choisir un fichier</label>
+            <input id="noc-file" type="file" accept=".csv,.txt" onChange="{{ n.onFile }}" style="display: none;">
+            <button onClick="{{ n.onDemo }}" style="cursor: pointer; border: 1px solid #3f424d; color: #b2b6ca; background: transparent; border-radius: 8px; padding: 8.4px 16.8px; font-size: 14px;" style-hover="border-color: #5d5294; color: #d2cefd;">Voir un exemple</button>
+          </div>
+          <span style="font-size: 12.5px; color: #75798c;">Aucune requête réseau · aucun compte · aucune conservation</span>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ n.hasData }}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 0 22.4px 16.8px; display: flex; flex-direction: column; gap: 16.8px;">
+
+        <div style="display: flex; align-items: center; gap: 11.2px; flex-wrap: wrap; padding: 11.2px 16.8px; background: #232532; border-radius: 8px; box-shadow: 0 0 0 1px #3f424d;">
+          <span style="font-size: 14px; font-weight: 500;">{{ n.fileName }}</span>
+          <span style="font-size: 12.5px; color: #9397ab;">{{ n.meta }}</span>
+          <span style="flex: 1;"></span>
+          <sc-if value="{{ n.hasSkipped }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ n.toggleSkipped }}" style="cursor: pointer; font-size: 12px; letter-spacing: 0.04em; color: #d2cefd; background: rgba(145,132,217,0.12); border: 1px solid #5d5294; border-radius: 4px; padding: 2.8px 8.4px;" style-hover="background: rgba(145,132,217,0.22);">{{ n.skippedLabel }}</button>
+          </sc-if>
+          <button onClick="{{ n.onReset }}" style="cursor: pointer; font-size: 12.5px; color: #9397ab; background: transparent; border: 1px solid #3f424d; border-radius: 4px; padding: 2.8px 8.4px;" style-hover="color: #d2cefd; border-color: #5d5294;">Changer de fichier</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8.4px;">
+          <div style="display: flex; align-items: baseline; gap: 8.4px;">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 500;">Vérifions les colonnes</h2>
+            <span style="font-size: 13px; color: #75798c;">Pré-remplies par détection — corrigez si besoin.</span>
+          </div>
+          <div style="display: flex; gap: 16.8px; flex-wrap: wrap;">
+            <label style="display: flex; flex-direction: column; gap: 5.6px; min-width: 200px;">
+              <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Date</span>
+              <select value="{{ n.dateCol }}" onChange="{{ n.setDate }}" style="background: #1b1d2d; color: #e9e9ed; border: 1px solid #3f424d; border-radius: 4px; padding: 5.6px 8.4px; font-size: 13.5px;">
+                <sc-for list="{{ n.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5.6px; min-width: 240px;">
+              <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Libellé</span>
+              <select value="{{ n.labelCol }}" onChange="{{ n.setLabel }}" style="background: #1b1d2d; color: #e9e9ed; border: 1px solid #3f424d; border-radius: 4px; padding: 5.6px 8.4px; font-size: 13.5px;">
+                <sc-for list="{{ n.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5.6px; min-width: 200px;">
+              <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Montant</span>
+              <select value="{{ n.mode }}" onChange="{{ n.setMode }}" style="background: #1b1d2d; color: #e9e9ed; border: 1px solid #3f424d; border-radius: 4px; padding: 5.6px 8.4px; font-size: 13.5px;">
+                <option value="single">Une seule colonne</option>
+                <option value="split">Débit / crédit séparés</option>
+              </select>
+            </label>
+            <sc-if value="{{ n.isSingle }}" hint-placeholder-val="{{ true }}">
+              <label style="display: flex; flex-direction: column; gap: 5.6px; min-width: 200px;">
+                <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Colonne montant</span>
+                <select value="{{ n.amountCol }}" onChange="{{ n.setAmount }}" style="background: #1b1d2d; color: #e9e9ed; border: 1px solid #3f424d; border-radius: 4px; padding: 5.6px 8.4px; font-size: 13.5px;">
+                  <sc-for list="{{ n.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+                </select>
+              </label>
+            </sc-if>
+            <sc-if value="{{ n.isSplit }}" hint-placeholder-val="{{ true }}">
+              <label style="display: flex; flex-direction: column; gap: 5.6px; min-width: 170px;">
+                <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Débit</span>
+                <select value="{{ n.debitCol }}" onChange="{{ n.setDebit }}" style="background: #1b1d2d; color: #e9e9ed; border: 1px solid #3f424d; border-radius: 4px; padding: 5.6px 8.4px; font-size: 13.5px;">
+                  <sc-for list="{{ n.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+                </select>
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5.6px; min-width: 170px;">
+                <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Crédit</span>
+                <select value="{{ n.creditCol }}" onChange="{{ n.setCredit }}" style="background: #1b1d2d; color: #e9e9ed; border: 1px solid #3f424d; border-radius: 4px; padding: 5.6px 8.4px; font-size: 13.5px;">
+                  <sc-for list="{{ n.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+                </select>
+              </label>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 22.4px; flex-wrap: wrap; padding: 11.2px 0; border-top: 1px solid rgba(233,233,237,0.12); border-bottom: 1px solid rgba(233,233,237,0.12);">
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Lignes lues</span>
+            <span style="font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums;">{{ n.countOk }}</span>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Période</span>
+            <span style="font-size: 22px; font-weight: 500;">{{ n.period }}</span>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Débits</span>
+            <span style="font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums;">{{ n.totalOut }}</span>
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #75798c;">Crédits</span>
+            <span style="font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; color: #d2cefd;">{{ n.totalIn }}</span>
+          </div>
+        </div>
+
+        <sc-if value="{{ n.showSkipped }}" hint-placeholder-val="{{ true }}">
+          <div style="background: #232532; border-radius: 8px; padding: 11.2px 16.8px; display: flex; flex-direction: column; gap: 5.6px; box-shadow: 0 0 0 1px #3f424d;">
+            <span style="font-size: 13px; color: #b2b6ca;">Lignes ignorées — date ou montant illisible. Elles n'entrent pas dans l'analyse.</span>
+            <sc-for list="{{ n.skipped }}" as="s" hint-placeholder-count="2">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #75798c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ligne {{ s.line }} · {{ s.text }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="flex: 1; overflow: auto; margin: 0 22.4px 11.2px; box-shadow: 0 0 0 1px #3f424d; border-radius: 8px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+          <thead>
+            <tr style="position: sticky; top: 0; background: #232532;">
+              <th style="text-align: left; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #9397ab; padding: 8.4px 11.2px; border-bottom: 1px solid rgba(233,233,237,0.16);">Date</th>
+              <th style="text-align: left; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #9397ab; padding: 8.4px 11.2px; border-bottom: 1px solid rgba(233,233,237,0.16);">Libellé</th>
+              <th style="text-align: right; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #9397ab; padding: 8.4px 11.2px; border-bottom: 1px solid rgba(233,233,237,0.16);">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ n.view }}" as="t" hint-placeholder-count="8">
+              <tr>
+                <td style="padding: 6.5px 11.2px; border-bottom: 1px solid rgba(233,233,237,0.08); color: #b2b6ca; font-variant-numeric: tabular-nums; white-space: nowrap;">{{ t.date }}</td>
+                <td style="padding: 6.5px 11.2px; border-bottom: 1px solid rgba(233,233,237,0.08); max-width: 620px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ t.label }}</td>
+                <td style="padding: 6.5px 11.2px; border-bottom: 1px solid rgba(233,233,237,0.08); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: {{ t.colorNoc }};">{{ t.amount }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 11.2px; padding: 0 22.4px 22.4px;">
+        <sc-if value="{{ n.canExpand }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ n.toggleAll }}" style="cursor: pointer; border: 1px solid #3f424d; color: #b2b6ca; background: transparent; border-radius: 8px; padding: 5.6px 11.2px; font-size: 13px;" style-hover="border-color: #5d5294; color: #d2cefd;">{{ n.expandLabel }}</button>
+        </sc-if>
+        <span style="font-size: 12.5px; color: #75798c;">{{ n.shownLabel }}</span>
+        <span style="flex: 1;"></span>
+        <button style="cursor: pointer; border: 1px solid #9184d9; color: #d2cefd; background: transparent; border-radius: 8px; padding: 8.4px 16.8px; font-size: 14px; font-weight: 500;" style-hover="background: rgba(145,132,217,0.14);">C'est bon, chercher les abonnements →</button>
+      </div>
+    </sc-if>
+  </div>
+
+  <!-- ── MODERNIST ────────────────────────────────────────────── -->
+  <div style="position: absolute; left: 1340px; top: 72px; width: 1200px; height: 1480px; display: flex; flex-direction: column; overflow: hidden; background: #f3f2f2; color: #201e1d; font-family: Archivo, system-ui, sans-serif; font-size: 15px; line-height: 1.55; border: 2px solid #201e1d;">
+
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; padding: 16px 24px; border-bottom: 2px solid #201e1d;">
+      <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.03em; text-transform: uppercase;">Miette</span>
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #ae1800;">100 % local — étape 01 / 04</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 220px 1fr; border-bottom: 2px solid #201e1d;">
+      <div style="padding: 24px; border-right: 2px solid #201e1d; display: flex; flex-direction: column; gap: 8px;">
+        <span style="font-weight: 800; font-size: 32px; line-height: 1; color: #ae1800;">01</span>
+        <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Import</span>
+      </div>
+      <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+        <h1 style="margin: 0; font-weight: 800; font-size: 44px; line-height: 1.02; letter-spacing: -0.03em; text-transform: uppercase;">Votre relevé<br>ne sort pas<br>de cet écran.</h1>
+        <p style="margin: 0; max-width: 560px; font-size: 15px; color: #444141; text-wrap: pretty;">Déposez l'export CSV de votre banque. Lecture dans le navigateur, aucune requête réseau, aucun stockage. On vérifie d'abord que chaque ligne est lue correctement.</p>
+      </div>
+    </div>
+
+    <sc-if value="{{ m.isEmpty }}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid; grid-template-columns: 220px 1fr; border-bottom: 2px solid #201e1d;">
+        <div style="padding: 24px; border-right: 2px solid #201e1d;">
+          <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Fichier</span>
+        </div>
+        <div onDragOver="{{ m.onDragOver }}" onDragLeave="{{ m.onDragLeave }}" onDrop="{{ m.onDrop }}" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; background: #eae9e9;">
+          <span style="font-weight: 800; font-size: 20px; text-transform: uppercase; letter-spacing: -0.01em;">Glissez le fichier CSV</span>
+          <span style="font-size: 14px; color: #444141;">Séparateur virgule ou point-virgule, accents Windows, décimales à la française : détectés.</span>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <label for="mod-file" style="cursor: pointer; display: inline-flex; align-items: center; min-width: 240px; background: #ec3013; color: #fff2ef; padding: 12px 16px; font-size: 14px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;" style-hover="background: #dd2b0f;">Choisir un fichier</label>
+            <input id="mod-file" type="file" accept=".csv,.txt" onChange="{{ m.onFile }}" style="display: none;">
+            <button onClick="{{ m.onDemo }}" style="cursor: pointer; text-align: left; min-width: 200px; background: transparent; color: #201e1d; border: 2px solid #201e1d; padding: 10px 16px; font-size: 14px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;" style-hover="background: #ffe0d9;">Voir un exemple</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ m.hasData }}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid; grid-template-columns: 220px 1fr; border-bottom: 2px solid #201e1d;">
+        <div style="padding: 16px 24px; border-right: 2px solid #201e1d; display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Fichier</span>
+          <span style="font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis;">{{ m.fileName }}</span>
+        </div>
+        <div style="padding: 16px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <span style="font-size: 13px; color: #444141;">{{ m.meta }}</span>
+          <span style="flex: 1;"></span>
+          <sc-if value="{{ m.hasSkipped }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ m.toggleSkipped }}" style="cursor: pointer; background: #ffe0d9; color: #ae1800; border: 2px solid #ae1800; padding: 4px 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;" style-hover="background: #ffc4b8;">{{ m.skippedLabel }}</button>
+          </sc-if>
+          <button onClick="{{ m.onReset }}" style="cursor: pointer; background: transparent; color: #201e1d; border: 2px solid #201e1d; padding: 4px 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;" style-hover="background: #eae9e9;">Changer</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 220px 1fr; border-bottom: 2px solid #201e1d;">
+        <div style="padding: 24px; border-right: 2px solid #201e1d; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-weight: 800; font-size: 32px; line-height: 1; color: #ae1800;">02</span>
+          <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Colonnes</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr);">
+          <label style="display: flex; flex-direction: column; gap: 6px; padding: 16px; border-right: 1px solid #d7d3d3;">
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Date</span>
+            <select value="{{ m.dateCol }}" onChange="{{ m.setDate }}" style="background: #f8f4f4; color: #201e1d; border: 2px solid #201e1d; border-radius: 0; padding: 6px 8px; font-size: 13px;">
+              <sc-for list="{{ m.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+            </select>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; padding: 16px; border-right: 1px solid #d7d3d3;">
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Libellé</span>
+            <select value="{{ m.labelCol }}" onChange="{{ m.setLabel }}" style="background: #f8f4f4; color: #201e1d; border: 2px solid #201e1d; border-radius: 0; padding: 6px 8px; font-size: 13px;">
+              <sc-for list="{{ m.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+            </select>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; padding: 16px; border-right: 1px solid #d7d3d3;">
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Montant</span>
+            <select value="{{ m.mode }}" onChange="{{ m.setMode }}" style="background: #f8f4f4; color: #201e1d; border: 2px solid #201e1d; border-radius: 0; padding: 6px 8px; font-size: 13px;">
+              <option value="single">Une colonne</option>
+              <option value="split">Débit / crédit</option>
+            </select>
+          </label>
+          <sc-if value="{{ m.isSingle }}" hint-placeholder-val="{{ true }}">
+            <label style="display: flex; flex-direction: column; gap: 6px; padding: 16px;">
+              <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Colonne</span>
+              <select value="{{ m.amountCol }}" onChange="{{ m.setAmount }}" style="background: #f8f4f4; color: #201e1d; border: 2px solid #201e1d; border-radius: 0; padding: 6px 8px; font-size: 13px;">
+                <sc-for list="{{ m.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+              </select>
+            </label>
+          </sc-if>
+          <sc-if value="{{ m.isSplit }}" hint-placeholder-val="{{ true }}">
+            <label style="display: flex; flex-direction: column; gap: 6px; padding: 16px;">
+              <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Débit / Crédit</span>
+              <div style="display: flex; gap: 8px;">
+                <select value="{{ m.debitCol }}" onChange="{{ m.setDebit }}" style="flex: 1; min-width: 0; background: #f8f4f4; color: #201e1d; border: 2px solid #201e1d; border-radius: 0; padding: 6px 8px; font-size: 13px;">
+                  <sc-for list="{{ m.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+                </select>
+                <select value="{{ m.creditCol }}" onChange="{{ m.setCredit }}" style="flex: 1; min-width: 0; background: #f8f4f4; color: #201e1d; border: 2px solid #201e1d; border-radius: 0; padding: 6px 8px; font-size: 13px;">
+                  <sc-for list="{{ m.headers }}" as="h" hint-placeholder-count="3"><option value="{{ h }}">{{ h }}</option></sc-for>
+                </select>
+              </div>
+            </label>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 2px solid #201e1d;">
+        <div style="padding: 16px 24px; border-right: 1px solid #d7d3d3; display: flex; flex-direction: column;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Lignes lues</span>
+          <span style="font-weight: 800; font-size: 30px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;">{{ m.countOk }}</span>
+        </div>
+        <div style="padding: 16px 24px; border-right: 1px solid #d7d3d3; display: flex; flex-direction: column;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Période</span>
+          <span style="font-weight: 800; font-size: 30px; letter-spacing: -0.02em;">{{ m.period }}</span>
+        </div>
+        <div style="padding: 16px 24px; border-right: 1px solid #d7d3d3; display: flex; flex-direction: column;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Débits</span>
+          <span style="font-weight: 800; font-size: 30px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;">{{ m.totalOut }}</span>
+        </div>
+        <div style="padding: 16px 24px; display: flex; flex-direction: column;">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Crédits</span>
+          <span style="font-weight: 800; font-size: 30px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: #ae1800;">{{ m.totalIn }}</span>
+        </div>
+      </div>
+
+      <sc-if value="{{ m.showSkipped }}" hint-placeholder-val="{{ true }}">
+        <div style="padding: 16px 24px; border-bottom: 2px solid #201e1d; background: #ffe0d9; display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 13px; font-weight: 600; color: #ae1800;">Lignes ignorées — date ou montant illisible.</span>
+          <sc-for list="{{ m.skipped }}" as="s" hint-placeholder-count="2">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #605d5d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">ligne {{ s.line }} · {{ s.text }}</div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div style="display: grid; grid-template-columns: 220px 1fr; flex: 1; min-height: 0; border-bottom: 2px solid #201e1d;">
+        <div style="padding: 24px; border-right: 2px solid #201e1d; display: flex; flex-direction: column; gap: 8px;">
+          <span style="font-weight: 800; font-size: 32px; line-height: 1; color: #ae1800;">03</span>
+          <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d;">Transactions brutes</span>
+          <span style="font-size: 12px; color: #605d5d;">{{ m.shownLabel }}</span>
+        </div>
+        <div style="overflow: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+            <thead>
+              <tr style="position: sticky; top: 0; background: #f3f2f2;">
+                <th style="text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d; padding: 10px 16px; border-bottom: 2px solid #201e1d;">Date</th>
+                <th style="text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d; padding: 10px 16px; border-bottom: 2px solid #201e1d;">Libellé</th>
+                <th style="text-align: right; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #605d5d; padding: 10px 16px; border-bottom: 2px solid #201e1d;">Montant</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ m.view }}" as="t" hint-placeholder-count="8">
+                <tr>
+                  <td style="padding: 8px 16px; border-bottom: 1px solid #d7d3d3; color: #605d5d; font-variant-numeric: tabular-nums; white-space: nowrap;">{{ t.date }}</td>
+                  <td style="padding: 8px 16px; border-bottom: 1px solid #d7d3d3; max-width: 560px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ t.label }}</td>
+                  <td style="padding: 8px 16px; border-bottom: 1px solid #d7d3d3; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; color: {{ t.colorMod }};">{{ t.amount }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 16px 24px;">
+        <sc-if value="{{ m.canExpand }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ m.toggleAll }}" style="cursor: pointer; text-align: left; background: transparent; color: #201e1d; border: 2px solid #201e1d; padding: 8px 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;" style-hover="background: #eae9e9;">{{ m.expandLabel }}</button>
+        </sc-if>
+        <span style="flex: 1;"></span>
+        <button style="cursor: pointer; text-align: left; min-width: 340px; background: #ec3013; color: #fff2ef; border: none; padding: 12px 16px; font-size: 14px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;" style-hover="background: #dd2b0f;">Chercher les abonnements →</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:2620,&quot;height&quot;:1620}}">
+const DEMO_CSV = [
+  "Releve de compte au 30/06/2026",
+  "Compte cheque n 1234 5678 9012 - EUR",
+  "",
+  "Date;Libelle;Debit;Credit",
+  "02/06/2026;VIR SALAIRE ATELIER NOVA JUIN;;2 480,00",
+  "02/06/2026;PRLV SEPA LOYER SCI BELLECOUR 20260602;760,00;",
+  "03/06/2026;CARTE 0206 MONOPRIX LYON 3;42,17;",
+  "04/06/2026;PRLV SEPA SPOTIFY AB 8842103;11,99;",
+  "05/06/2026;CARTE 0304 BOULANGERIE MICHEL;7,40;",
+  "05/06/2026;PRLV SEPA ORANGE SA 445120983;29,99;",
+  "07/06/2026;ACHAT CB SNCF CONNECT 0606;68,00;",
+  "08/06/2026;PRLV SEPA ENGIE 7789012;84,20;",
+  "09/06/2026;CARTE 0806 CAFE MOKXA;4,80;",
+  "10/06/2026;PRLV SEPA NETFLIX.COM 1109223;13,49;",
+  "11/06/2026;PAIEMENT CB DECATHLON 1006;54,90;",
+  "12/06/2026;VIR RECU MARIE L REMBOURSEMENT;;35,00",
+  "14/06/2026;PRLV SEPA MAIF ASSURANCE 3320119;38,60;",
+  "15/06/2026;CARTE 1406 CARREFOUR MARKET;61,35;",
+  "16/06/2026;PRLV SEPA ICLOUD APPLE 9021384;2,99;",
+  "18/06/2026;ACHAT CB AMAZON EU 1706;23,10;",
+  "19/06/2026;CARTE 1806 PHARMACIE DES HALLES;12,90;",
+  "20/06/2026;PRLV SEPA SALLE ESCALADE 5512;49,00;",
+  "22/06/2026;CARTE 2106 RESTAURANT LE BOUCHON;36,00;",
+  "23/06/2026;PRLV SEPA FREE MOBILE 220314;19,99;",
+  "24/06/2026;CARTE 2306 FNAC LYON;29,99;",
+  "25/06/2026;PRLV SEPA CANAL+ 88213;24,90;",
+  "26/06/2026;CARTE 2506 BIOCOOP;38,74;",
+  "27/06/2026;RETRAIT DAB 2606 LYON PART DIEU;60,00;",
+  "date illisible;PRLV SEPA LIGNE CORROMPUE;;",
+  "28/06/2026;PRLV SEPA GYM BASIC FIT 774102;29,99;",
+  "29/06/2026;CARTE 2806 UBER EATS;21,50;",
+  "30/06/2026;PRLV SEPA ADOBE 66120384;35,99;"
+].join("\n");
+
+const EUR = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
+const PREVIEW = 22;
+
+function decodeBuffer(buf) {
+  const utf = new TextDecoder("utf-8").decode(buf);
+  if (utf.indexOf("\uFFFD") === -1) return { text: utf, encoding: "UTF-8" };
+  return { text: new TextDecoder("windows-1252").decode(buf), encoding: "Windows-1252" };
+}
+
+function pickDelimiter(lines) {
+  const cands = [";", ",", "\t", "|"];
+  let best = ";", bestScore = -1;
+  cands.forEach(function (d) {
+    const counts = lines.map(function (l) { return l.split(d).length - 1; }).filter(function (c) { return c > 0; });
+    if (!counts.length) return;
+    const tally = {};
+    counts.forEach(function (c) { tally[c] = (tally[c] || 0) + 1; });
+    const mode = Object.keys(tally).reduce(function (a, b) { return tally[b] > tally[a] ? b : a; });
+    const score = tally[mode] * Number(mode);
+    if (score > bestScore) { bestScore = score; best = d; }
+  });
+  return best;
+}
+
+function findHeaderIndex(lines, delim) {
+  const counts = lines.map(function (l) { return l.split(delim).length; });
+  const tally = {};
+  counts.forEach(function (c) { if (c > 1) tally[c] = (tally[c] || 0) + 1; });
+  const keys = Object.keys(tally);
+  if (!keys.length) return 0;
+  const modal = Number(keys.reduce(function (a, b) { return tally[b] > tally[a] ? b : a; }));
+  for (let i = 0; i < lines.length; i++) {
+    if (counts[i] === modal && lines[i].trim() !== "") return i;
+  }
+  return 0;
+}
+
+const noAcc = function (s) {
+  return String(s == null ? "" : s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+};
+
+function guess(headers, patterns) {
+  for (let p = 0; p < patterns.length; p++) {
+    for (let i = 0; i < headers.length; i++) {
+      if (patterns[p].test(noAcc(headers[i]))) return headers[i];
+    }
+  }
+  return null;
+}
+
+function parseDate(v) {
+  const s = String(v == null ? "" : v).trim();
+  let m = s.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
+  if (m) {
+    let y = Number(m[3]);
+    if (y < 100) y += y < 70 ? 2000 : 1900;
+    const d = new Date(y, Number(m[2]) - 1, Number(m[1]));
+    return isNaN(d) ? null : d;
+  }
+  m = s.match(/(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})/);
+  if (m) {
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return isNaN(d) ? null : d;
+  }
+  return null;
+}
+
+function parseAmount(v) {
+  if (v == null) return null;
+  let t = String(v).replace(/[\s\u00a0\u202f\u2009]/g, "").replace(/[€$£]/g, "").replace(/EUR/gi, "");
+  if (t === "" || t === "-") return null;
+  const neg = /^\(.*\)$/.test(t) || /-$/.test(t) || /^-/.test(t);
+  t = t.replace(/[()]/g, "").replace(/^-/, "").replace(/-$/, "");
+  if (t.indexOf(",") > -1 && t.indexOf(".") > -1) {
+    t = t.indexOf(",") > t.indexOf(".") ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, "");
+  } else if (t.indexOf(",") > -1) {
+    t = t.replace(/,/g, ".");
+  }
+  const n = parseFloat(t);
+  if (isNaN(n)) return null;
+  return neg ? -Math.abs(n) : n;
+}
+
+function scoreColumns(headers, rows) {
+  const sample = rows.slice(0, 25);
+  const s = { date: null, label: null, num: [] };
+  headers.forEach(function (h) {
+    let dates = 0, nums = 0, texts = 0;
+    sample.forEach(function (r) {
+      const v = r[h];
+      if (v == null || String(v).trim() === "") return;
+      if (parseDate(v)) dates++;
+      else if (parseAmount(v) !== null) nums++;
+      else texts++;
+    });
+    if (dates > sample.length * 0.5 && !s.date) s.date = h;
+    else if (nums > texts && nums > 2) s.num.push(h);
+    else if (texts > 2 && !s.label) s.label = h;
+  });
+  return s;
+}
+
+function emptyState() {
+  return {
+    stage: "empty", fileName: "", encoding: "", delim: "", skippedHeaderLines: 0,
+    headers: [], rows: [], dateCol: "", labelCol: "", mode: "single",
+    amountCol: "", debitCol: "", creditCol: "", showAll: false, showSkipped: false
+  };
+}
+
+class Component extends DCLogic {
+  state = { n: emptyState(), m: emptyState() };
+
+  componentDidMount() {
+    this.ingest("n", DEMO_CSV, "exemple-compte-juin.csv", "UTF-8");
+    this.ingest("m", DEMO_CSV, "exemple-compte-juin.csv", "UTF-8");
+  }
+
+  ingest(key, text, fileName, encoding) {
+    const lines = text.split(/\r?\n/);
+    const delim = pickDelimiter(lines);
+    const hIdx = findHeaderIndex(lines, delim);
+    const body = lines.slice(hIdx).join("\n");
+    const res = window.Papa.parse(body, { header: true, delimiter: delim, skipEmptyLines: true });
+    const headers = (res.meta.fields || []).map(function (f, i) { return f && f.trim() !== "" ? f : "colonne " + (i + 1); });
+    const rows = res.data.map(function (r) {
+      const o = {};
+      (res.meta.fields || []).forEach(function (f, i) { o[headers[i]] = r[f]; });
+      return o;
+    });
+    const byName = {
+      date: guess(headers, [/^DATE/, /DATE.*(OP|VAL|COMPTA)/, /DATE/]),
+      label: guess(headers, [/LIBELL/, /INTITUL/, /DESCRIPT/, /NATURE/, /OPERATION/, /MOTIF/, /^LABEL/]),
+      amount: guess(headers, [/^MONTANT$/, /MONTANT/, /^AMOUNT/, /VALEUR/]),
+      debit: guess(headers, [/DEBIT/, /SORTIE/, /RETRAIT/]),
+      credit: guess(headers, [/CREDIT/, /ENTREE/, /DEPOT/])
+    };
+    const byContent = scoreColumns(headers, rows);
+    const split = !!(byName.debit && byName.credit && byName.debit !== byName.credit);
+    this.setState(function (st) {
+      const next = Object.assign({}, emptyState(), {
+        stage: "data", fileName: fileName, encoding: encoding,
+        delim: delim === "\t" ? "tabulation" : delim,
+        skippedHeaderLines: hIdx, headers: headers, rows: rows,
+        dateCol: byName.date || byContent.date || headers[0] || "",
+        labelCol: byName.label || byContent.label || headers[1] || "",
+        mode: split ? "split" : "single",
+        amountCol: byName.amount || byContent.num[0] || headers[headers.length - 1] || "",
+        debitCol: byName.debit || byContent.num[0] || "",
+        creditCol: byName.credit || byContent.num[1] || ""
+      });
+      const patch = {};
+      patch[key] = next;
+      return patch;
+    });
+  }
+
+  readFile(key, file) {
+    if (!file) return;
+    const self = this;
+    const reader = new FileReader();
+    reader.onload = function () {
+      const d = decodeBuffer(reader.result);
+      self.ingest(key, d.text, file.name, d.encoding);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  patch(key, obj) {
+    this.setState(function (st) {
+      const p = {};
+      p[key] = Object.assign({}, st[key], obj);
+      return p;
+    });
+  }
+
+  build(key) {
+    const self = this;
+    const s = this.state[key];
+    const rows = [];
+    const skipped = [];
+    if (s.stage === "data") {
+      s.rows.forEach(function (r, i) {
+        const d = parseDate(r[s.dateCol]);
+        let amt = null;
+        if (s.mode === "split") {
+          const deb = parseAmount(r[s.debitCol]);
+          const cred = parseAmount(r[s.creditCol]);
+          if (deb !== null) amt = -Math.abs(deb);
+          else if (cred !== null) amt = Math.abs(cred);
+        } else {
+          amt = parseAmount(r[s.amountCol]);
+        }
+        const label = String(r[s.labelCol] == null ? "" : r[s.labelCol]).trim();
+        if (!d || amt === null) {
+          skipped.push({
+            line: i + s.skippedHeaderLines + 2,
+            text: s.headers.map(function (h) { return r[h]; }).filter(function (v) { return v != null && String(v).trim() !== ""; }).join(" · ").slice(0, 120) || "(vide)"
+          });
+          return;
+        }
+        rows.push({ d: d, label: label || "(sans libellé)", amt: amt });
+      });
+    }
+    const view = (s.showAll ? rows : rows.slice(0, PREVIEW)).map(function (t) {
+      return {
+        date: t.d.toLocaleDateString("fr-FR"),
+        label: t.label,
+        amount: EUR.format(t.amt),
+        colorNoc: t.amt > 0 ? "#d2cefd" : "#e9e9ed",
+        colorMod: t.amt > 0 ? "#ae1800" : "#201e1d"
+      };
+    });
+    const dates = rows.map(function (t) { return t.d.getTime(); });
+    const out = rows.filter(function (t) { return t.amt < 0; }).reduce(function (a, t) { return a + t.amt; }, 0);
+    const inc = rows.filter(function (t) { return t.amt > 0; }).reduce(function (a, t) { return a + t.amt; }, 0);
+    const fmtShort = function (ms) {
+      return new Date(ms).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+    };
+    const meta = [
+      s.rows.length + " lignes",
+      "séparateur « " + s.delim + " »",
+      s.encoding,
+      s.skippedHeaderLines > 0 ? s.skippedHeaderLines + " ligne(s) d'en-tête ignorée(s)" : null
+    ].filter(Boolean).join(" · ");
+
+    return {
+      isEmpty: s.stage === "empty",
+      hasData: s.stage === "data",
+      fileName: s.fileName,
+      meta: meta,
+      headers: s.headers,
+      dateCol: s.dateCol, labelCol: s.labelCol, mode: s.mode,
+      amountCol: s.amountCol, debitCol: s.debitCol, creditCol: s.creditCol,
+      isSingle: s.mode === "single", isSplit: s.mode === "split",
+      view: view,
+      countOk: String(rows.length),
+      period: dates.length ? fmtShort(Math.min.apply(null, dates)) + " → " + fmtShort(Math.max.apply(null, dates)) : "—",
+      totalOut: EUR.format(out),
+      totalIn: EUR.format(inc),
+      skipped: skipped.slice(0, 8),
+      hasSkipped: skipped.length > 0,
+      showSkipped: s.showSkipped && skipped.length > 0,
+      skippedLabel: (s.showSkipped ? "Masquer" : "Voir") + " " + skipped.length + " ligne" + (skipped.length > 1 ? "s" : "") + " ignorée" + (skipped.length > 1 ? "s" : ""),
+      canExpand: rows.length > PREVIEW,
+      expandLabel: s.showAll ? "Réduire l'aperçu" : "Tout voir (" + rows.length + ")",
+      shownLabel: rows.length ? (s.showAll ? rows.length + " lignes affichées" : "Aperçu des " + Math.min(PREVIEW, rows.length) + " premières lignes sur " + rows.length) : "Aucune ligne exploitable",
+      onFile: function (e) { self.readFile(key, e.target.files && e.target.files[0]); },
+      onDemo: function () { self.ingest(key, DEMO_CSV, "exemple-compte-juin.csv", "UTF-8"); },
+      onDragOver: function (e) { e.preventDefault(); },
+      onDragLeave: function (e) { e.preventDefault(); },
+      onDrop: function (e) {
+        e.preventDefault();
+        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        self.readFile(key, f);
+      },
+      onReset: function () { self.patch(key, emptyState()); },
+      toggleAll: function () { self.patch(key, { showAll: !s.showAll }); },
+      toggleSkipped: function () { self.patch(key, { showSkipped: !s.showSkipped }); },
+      setDate: function (e) { self.patch(key, { dateCol: e.target.value }); },
+      setLabel: function (e) { self.patch(key, { labelCol: e.target.value }); },
+      setMode: function (e) { self.patch(key, { mode: e.target.value }); },
+      setAmount: function (e) { self.patch(key, { amountCol: e.target.value }); },
+      setDebit: function (e) { self.patch(key, { debitCol: e.target.value }); },
+      setCredit: function (e) { self.patch(key, { creditCol: e.target.value }); }
+    };
+  }
+
+  renderVals() {
+    return { n: this.build("n"), m: this.build("m") };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Miette</title>
+    <!-- Polices auto-hébergées (voir src/index.css) : aucune requête vers un tiers. -->
+    <script>
+      // Posé avant le premier rendu, sinon la page clignote en blanc au chargement.
+      // Choix mémorisé s'il existe, sinon le réglage du système.
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem("miette:theme");
+        } catch (e) {
+          /* navigation privée : on retombe sur le réglage système */
+        }
+        var dark = stored
+          ? stored === "dark"
+          : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
